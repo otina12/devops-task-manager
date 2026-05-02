@@ -59,7 +59,7 @@
         - "{{ app_base }}/green"
         - "{{ app_base }}/logs"
 
-    - name: Create active_slot file (default: blue)
+    - name: "Create active_slot file (default: blue)"
       copy:
         content: "blue"
         dest: "{{ app_base }}/active_slot"
