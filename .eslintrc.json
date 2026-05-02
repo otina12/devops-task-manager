@@ -5,5 +5,11 @@
   "rules": {
     "no-unused-vars": "warn",
     "no-console": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["app/public/**/*.js"],
+      "env": { "browser": true, "node": false, "jest": false }
+    }
+  ]
 }
