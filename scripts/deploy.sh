@@ -23,7 +23,7 @@ echo " Deploying to : $INACTIVE (port $NEW_PORT)"
 echo "============================================"
 
 echo "--> Syncing code to $INACTIVE slot..."
-rsync -a --delete \
+rsync -rlpt --delete \
   --exclude='node_modules' \
   --exclude='.git' \
   --exclude='scripts' \

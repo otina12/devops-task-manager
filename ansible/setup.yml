@@ -4,7 +4,7 @@
   become: yes
 
   vars:
-    app_user: "{{ ansible_user_id }}"
+    app_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
     app_base: /opt/app
     node_version: "20"
     blue_port: 3001
