@@ -12,6 +12,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY app ./app
 
+RUN apk upgrade --no-cache && \
+    rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 EXPOSE 3000
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
