@@ -48,6 +48,24 @@
         name: nginx
         state: present
 
+    - name: Install Docker and Compose plugin
+      apt:
+        name: [docker.io, docker-compose-v2]
+        state: present
+        update_cache: yes
+
+    - name: Add app user to docker group
+      user:
+        name: "{{ app_user }}"
+        groups: docker
+        append: yes
+
+    - name: Start and enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
     - name: Create app directories
       file:
         path: "{{ item }}"
