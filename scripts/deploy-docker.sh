@@ -43,6 +43,15 @@ sed -i.bak "s/server app-[a-z]*:3000;/server app-$INACTIVE:3000;/" "$NGINX_CONF"
 rm -f "$NGINX_CONF.bak"
 docker compose exec -T nginx nginx -s reload
 
+echo "--> Running post-deploy smoke test..."
+if ! bash "$REPO_DIR/scripts/smoke_test.sh" http://localhost:3000; then
+  echo "ERROR: smoke test failed. Auto-rolling back to $ACTIVE..."
+  sed -i.bak "s/server app-[a-z]*:3000;/server app-$ACTIVE:3000;/" "$NGINX_CONF"
+  rm -f "$NGINX_CONF.bak"
+  docker compose exec -T nginx nginx -s reload
+  exit 1
+fi
+
 echo "$INACTIVE" > "$SLOT_FILE"
 
 echo "============================================"

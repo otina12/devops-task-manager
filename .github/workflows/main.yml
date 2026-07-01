@@ -118,3 +118,6 @@ jobs:
 
       - name: Run Blue-Green deploy
         run: bash scripts/deploy.sh
+
+      - name: Post-deploy smoke test
+        run: bash scripts/smoke_test.sh http://localhost:3000

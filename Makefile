@@ -1,4 +1,4 @@
-.PHONY: up down logs deploy rollback test lint urls
+.PHONY: up down logs deploy rollback validate smoke test lint urls
 
 up:
 	docker compose up -d --build
@@ -22,6 +22,12 @@ deploy:
 
 rollback:
 	bash scripts/rollback-docker.sh
+
+validate:
+	bash scripts/validate_env.sh
+
+smoke:
+	bash scripts/smoke_test.sh
 
 test:
 	npm test
