@@ -113,7 +113,7 @@ services:
     networks: [appnet]
 
   promtail:
-    image: grafana/promtail:2.9.8
+    image: grafana/promtail:3.6.11
     container_name: promtail
     command: -config.file=/etc/promtail/promtail-config.yml
     volumes:
