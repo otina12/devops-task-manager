@@ -1,0 +1,3 @@
+# Accepted findings. Add a CVE id per line with justification.
+# Example:
+# CVE-2024-00000  # no fix available; not reachable in our usage

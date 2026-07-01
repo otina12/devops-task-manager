@@ -1,0 +1,160 @@
+services:
+  app-blue:
+    build: .
+    image: task-manager:latest
+    container_name: app-blue
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks: [appnet]
+
+  app-green:
+    build: .
+    image: task-manager:latest
+    container_name: app-green
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks: [appnet]
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    depends_on:
+      app-blue:
+        condition: service_healthy
+      app-green:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    restart: unless-stopped
+    networks: [appnet]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks: [appnet]
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    volumes:
+      - ./monitoring/alertmanager:/etc/alertmanager:ro
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+    networks: [appnet]
+
+  alert-receiver:
+    build: ./monitoring/alert-receiver
+    container_name: alert-receiver
+    environment:
+      - PORT=5001
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    networks: [appnet]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    networks: [appnet]
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: loki
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    networks: [appnet]
+
+  promtail:
+    image: grafana/promtail:3.6.11
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks: [appnet]
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks: [appnet]
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - /:/host:ro
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks: [appnet]
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  loki-data:

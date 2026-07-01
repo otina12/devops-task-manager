@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+.git
+.github
+screenshots
+tests
+ansible
+monitoring
+deploy
+scripts
+docs
+*.md
+.env
