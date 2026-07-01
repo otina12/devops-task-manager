@@ -1,0 +1,29 @@
+groups:
+  - name: app-alerts
+    rules:
+      - alert: AppInstanceDown
+        expr: up{job="app"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "App instance {{ $labels.slot }} is down"
+          description: "{{ $labels.instance }} (slot {{ $labels.slot }}) has not responded for 30s."
+
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[2m])) by (instance) > 0.2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate on {{ $labels.instance }}"
+          description: "5xx rate above 0.2/s for 1m on {{ $labels.instance }}."
+
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance)) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency above 200ms on {{ $labels.instance }}"
+          description: "95th percentile request latency exceeded 200ms for 2m."
